@@ -1,0 +1,34 @@
+{
+  "development": {
+    "server": "172.16.3.53",
+    "database": "BDUCCI",
+    "user": "ssapplinux",
+    "password": "killbducci4me",
+    "port": 1433,
+    "dbintbanner": {
+      "server": "172.16.3.53",
+      "database": "BDINTBANNER",
+      "user": "ssapplinux",
+      "password": "killbducci4me",
+      "port": 1433
+    },
+    "urlcontipay":"https://paymenttest.continental.edu.pe/FormaPago1.aspx?ID=",
+    "JWT_KEY_CONTINUA": "e805243052c19520022d926a3122b3b868c25cf3b8f8ddbeaf9cb3220f26b3374380c37fdede889972649ce8679f99ea2fa9b62e12cf839124f41f71ad6d413a"
+  },
+  "production": {
+    "server": "",
+    "database": "",
+    "user": "",
+    "password": "",
+    "port": 0,
+    "dbintbanner": {
+      "server": "",
+      "database": "",
+      "user": "",
+      "password": "",
+      "port": 0
+    },
+    "urlcontipay":"",
+    "JWT_KEY_CONTINUA": ""
+  }
+}
