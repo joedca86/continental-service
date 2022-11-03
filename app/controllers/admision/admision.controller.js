@@ -48,15 +48,15 @@ router.get('/sedes', async (req, res) => {
 
 });
 
-router.get('/colegios/:departamento', async (req, res) => {
+router.get('/colegios/:distrito', async (req, res) => {
 
-    const { departamento } = req.params;
+    const { distrito } = req.params;
 
     getProcedure(req, res, 'dbConfig', '[DBO].[sp_AdmisionListColegios]', [
         {
-            name: 'Departamento',
-            length: 2,
-            value: departamento
+            name: 'Distrito',
+            length: 6,
+            value: distrito
         }
     ]);
 
