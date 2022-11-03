@@ -44,7 +44,7 @@ router.get('/token', function (req, res, next) {
 
 router.get('/sedes', async (req, res) => {
 
-    getProcedure(req, res, 'dbConfig', '[DBO].[sp_ListSedes]', []);
+    getProcedure(req, res, 'dbConfig', '[DBO].[sp_AdmisionListSedes]', []);
 
 });
 
@@ -52,7 +52,7 @@ router.get('/colegios/:departamento', async (req, res) => {
 
     const { departamento } = req.params;
 
-    getProcedure(req, res, 'dbConfig', '[DBO].[sp_ListColegios]', [
+    getProcedure(req, res, 'dbConfig', '[DBO].[sp_AdmisionListColegios]', [
         {
             name: 'Departamento',
             length: 2,
@@ -64,13 +64,13 @@ router.get('/colegios/:departamento', async (req, res) => {
 
 router.get('/periodos', async (req, res) => {
 
-    getProcedure(req, res, 'dbConfig', '[DBO].[sp_ListPeriodos]', []);
+    getProcedure(req, res, 'dbConfig', '[DBO].[sp_AdmisionListPeriodos]', []);
 
 });
 
 router.get('/escuelas', async (req, res) => {
 
-    getProcedure(req, res, 'dbConfig', '[DBO].[sp_ListEscuelas]', []);
+    getProcedure(req, res, 'dbConfig', '[DBO].[sp_AdmisionListEscuelas]', []);
 
 });
 
@@ -79,7 +79,7 @@ router.get('/escuelaadmision/:department/:sede', async (req, res) => {
     const department = req.params.department;
     const sede = req.params.sede;
 
-    getProcedure(req, res, 'dbConfig', '[DBO].[sp_ListEscuelaAdmision]', [
+    getProcedure(req, res, 'dbConfig', '[DBO].[sp_AdmisionListEscuelaAdmision]', [
         {
             name: 'Department',
             length: 10,
@@ -99,7 +99,7 @@ router.get('/modalidadadmision/:periodo/:escuela', async (req, res) => {
     const escuela = req.params.escuela;
     const periodo = req.params.periodo;
 
-    getProcedure(req, res, 'dbConfig', '[DBO].[sp_ListModalidadAdmision]', [
+    getProcedure(req, res, 'dbConfig', '[DBO].[sp_AdmisionListModalidadAdmision]', [
         {
             name: 'IDPerAcad',
             length: 6,
@@ -115,7 +115,7 @@ router.get('/modalidadadmision/:periodo/:escuela', async (req, res) => {
 
 router.get('/modalidadestudio', async (req, res) => {
 
-    getProcedure(req, res, 'BDINTBANNERConfig', '[DIM].[sp_ListModalidadEstudio]', []);
+    getProcedure(req, res, 'BDINTBANNERConfig', '[DIM].[sp_AdmisionListModalidadEstudio]', []);
     
 });
 
