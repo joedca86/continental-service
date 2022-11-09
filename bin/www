@@ -9,6 +9,7 @@ var debug = require('debug')('services:server');
 var http = require('http');
 require('dotenv').config();
 
+const contipayQueue = require('../app/controllers/contipayQueue');
 /**
  * Get port from environment and store in Express.
  */
@@ -88,4 +89,5 @@ function onListening() {
     ? 'pipe ' + addr
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
+  contipayQueue.init();
 }

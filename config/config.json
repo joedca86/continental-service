@@ -13,7 +13,10 @@
       "port": 1433
     },
     "urlcontipay":"https://paymenttest.continental.edu.pe/FormaPago1.aspx?ID=",
-    "JWT_KEY_CONTINUA": "e805243052c19520022d926a3122b3b868c25cf3b8f8ddbeaf9cb3220f26b3374380c37fdede889972649ce8679f99ea2fa9b62e12cf839124f41f71ad6d413a"
+    "JWT_KEY_CONTINUA": "e805243052c19520022d926a3122b3b868c25cf3b8f8ddbeaf9cb3220f26b3374380c37fdede889972649ce8679f99ea2fa9b62e12cf839124f41f71ad6d413a",
+    "rabbitmq": {
+      "url": "amqp://guest:guest@localhost:5672"
+    }
   },
   "production": {
     "server": "",
@@ -29,6 +32,9 @@
       "port": 0
     },
     "urlcontipay":"",
-    "JWT_KEY_CONTINUA": ""
+    "JWT_KEY_CONTINUA": "",
+    "rabbitmq": {
+      "url": ""
+    }
   }
 }

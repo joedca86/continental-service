@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 const sql = require('mssql');
 const jwt = require('./jwt');
+const ContipayQueue = require('./../contipayQueue');
 
 const createConnection = (config) => new sql.ConnectionPool(config).connect();
 
@@ -136,8 +137,6 @@ router.post('/', async (req, res) => {
     }
     let pool;
 
-    console.log(form);
-
     try {
         pool = await createConnection(req.app.get('dbConfig'));
         const requestDB = pool.request();
@@ -162,8 +161,6 @@ router.post('/', async (req, res) => {
         requestDB.input('c_IDLugarTrabajo', sql.VarChar(5), '');
         const responseDB = await requestDB.execute('[dbo].[sp_CrearActualizarPersonaFrm]');
         const personParams = responseDB.recordset[0];
-
-        console.log(personParams);
 
         if (!personParams.Result) {
             throw 'No se completó la operación porque el procedimiento para crear o actualizar la persona devolvió: ' + personParams.strResult;
@@ -203,73 +200,117 @@ router.post('/', async (req, res) => {
     } finally {
         if (pool) await pool.close();
     }
-
+    
     res.send(responseHTTP);
 });
 
 router.post('/pagoonline', async (req, res) => {
-    console.log("1");
+    
     let responseToken = jwt.validateJWTToken(req);
     if (responseToken.status != 0) {
         return res.status(responseToken.status).send({ status: 0, message: responseToken.message });
     }
 
     const form = req.body
+    const recreate_payment = form.recreate_payment;
     let pool = null;
-    console.log("2");
+
     try {
 
         const pool = await createConnection(req.app.get('dbConfig'));
 
+        const status = form.dataMap.STATUS === 'Authorized' ? '1' : '0';
+
         const requestDB = pool.request();
         requestDB.input('c_IDPago', sql.Char(9), form.idpago);
-        requestDB.input('c_formapago', sql.CHAR(1), form.formapago);
-        requestDB.input('c_tipocomprobante', sql.CHAR(1), form.tipoComprobante);
-        requestDB.input('c_estado', sql.CHAR(1), form.estado);
-        requestDB.input('c_idbanco', sql.VarChar(8), form.idbanco);
-        requestDB.input('c_tipotarjeta', sql.VarChar(1), form.tipotarjeta);
+        requestDB.input('c_formapago', sql.CHAR(1), "0");
+        requestDB.input('c_tipocomprobante', sql.CHAR(1), "1");
+        requestDB.input('c_estado', sql.CHAR(1), status);
+        requestDB.input('c_idbanco', sql.VarChar(8), "");
+        requestDB.input('c_tipotarjeta', sql.VarChar(1), "");
         requestDB.input('c_eticket', sql.VarChar(30), form.eticket);
 
-        const result = await requestDB.execute('[dbo].[sp_updatepagoonline]');
-        console.log("3");
-        console.log(result);
-
-        if (!result)
+        const responseDB = await requestDB.execute('[dbo].[sp_updatepagoonline]');
+        if (!responseDB)
             throw 'No se ha logrado realizar la operación de update pago online';
-
-        console.log("4");
 
         if (form.eticket) {
             const requestDB_2 = pool.request();
             requestDB_2.input('c_eTicket', sql.VarChar(30), form.eticket);
-            requestDB_2.input('c_respuesta', sql.VarChar(30), form.respuesta);
-            requestDB_2.input('c_estado', sql.VarChar(30), form.estadoticket);
-            requestDB_2.input('c_cod_tienda', sql.VarChar(30), form.codtienda);
-            requestDB_2.input('c_nordent', sql.VarChar(9), form.nordent);
-            requestDB_2.input('c_cod_accion', sql.VarChar(10), form.codaccion);
-            requestDB_2.input('c_nro_tarj', sql.VarChar(30), form.nrotarj);
-            requestDB_2.input('c_nombre_th', sql.VarChar(50), form.nombreth);
-            requestDB_2.input('c_ori_tarjeta', sql.VarChar(10), form.oritarjeta);
-            requestDB_2.input('c_nom_emisor', sql.VarChar(50), form.nomemisor);
-            requestDB_2.input('c_eci_result', sql.VarChar(10), form.eciresult);
-            requestDB_2.input('c_dsc_eci', sql.VarChar(50), form.dsceci);
-            requestDB_2.input('c_cod_autoriza', sql.VarChar(10), form.codautoriza);
-            requestDB_2.input('c_cod_rescvv2', sql.VarChar(10), form.codrescvv2);
-            requestDB_2.input('n_imp_autorizado', sql.Float, form.impautorizado);
-            requestDB_2.input('c_fecha_hora_tx', sql.VarChar(15), form.fechahoratx);
-            requestDB_2.input('c_fechahora_deposito', sql.VarChar(15), form.fechahoradeposito);
-            requestDB_2.input('c_fechahora_devolucion', sql.VarChar(15), form.fechahoradevolucion);
-            requestDB_2.input('c_dato_comercio', sql.VarChar(50), form.datocomercio);
+            requestDB_2.input('c_respuesta', sql.VarChar(30), form.dataMap.ACTION_DESCRIPTION);
+            requestDB_2.input('c_estado', sql.VarChar(30), status);
+            requestDB_2.input('c_cod_tienda', sql.VarChar(30), form.dataMap.MERCHANT);
+            requestDB_2.input('c_nordent', sql.VarChar(9), form.dataMap.TRACE_NUMBER);
+            requestDB_2.input('c_cod_accion', sql.VarChar(10), form.dataMap.ACTION_CODE);
+            requestDB_2.input('c_nro_tarj', sql.VarChar(30), form.dataMap.CARD);
+            requestDB_2.input('c_nombre_th', sql.VarChar(50), form.student_name);
+            requestDB_2.input('c_ori_tarjeta', sql.VarChar(10), form.dataMap.BRAND);
+            requestDB_2.input('c_nom_emisor', sql.VarChar(50), `${form.dataMap.BRAND.toUpperCase()}-VISANET`);
+            requestDB_2.input('c_eci_result', sql.VarChar(10), form.dataMap.ACTION_CODE);
+            requestDB_2.input('c_dsc_eci', sql.VarChar(50), form.dataMap.ECI_DESCRIPTION);
+            requestDB_2.input('c_cod_autoriza', sql.VarChar(10), form.dataMap.AUTHORIZATION_CODE);
+            requestDB_2.input('c_cod_rescvv2', sql.VarChar(10), '');
+            requestDB_2.input('n_imp_autorizado', sql.Float, form.dataMap.AMOUNT);
+            requestDB_2.input('c_fecha_hora_tx', sql.VarChar(15), form.transactionDate);
+            requestDB_2.input('c_fechahora_deposito', sql.VarChar(15), '---');
+            requestDB_2.input('c_fechahora_devolucion', sql.VarChar(15), '---');
+            requestDB_2.input('c_dato_comercio', sql.VarChar(50), form.idpago);
             const responseDB_2 = await requestDB_2.execute('[dbo].[sp_updateTicketResult]');
-            console.log("5");
-            console.log(responseDB_2);
+            if (!responseDB_2)
+                throw 'No se ha logrado realizar la operación de update pago online';
         }
+        
+        const requestDB_3 = pool.request();
+        requestDB_3.input('n_IDPago', sql.Char(9), form.idpago);
+        const invoiceData = await requestDB_3.execute('[dbo].[sp_DatosBoleta]');
+        if (!invoiceData)
+                throw 'No se ha logrado realizar la operación de update pago online';
+        
+        const data = invoiceData.recordset[0];
+        const result = {
+            unit: data.IDDependencia || 'UCCI',
+            campus: data.IDSede || 'HYO',
+            student: {
+                code: data.IDAlumno,
+                name: data.NomCompleto,
+            },
+            payment: {
+                debts: [
+                    {
+                        amount: data.Monto.toFixed(2),
+                        description: data.Descripcion,
+                    }
+                ],
+                currencyPrefix: data.Moneda === 'S' ? 'S/ ' : data.MONEDA,
+                invoiceNumber: data.DocBol,
+                type: data.IDTipo,
+                total: data.Monto.toFixed(2),
+                qrText: data.qrText,
+            }
+        };
 
-        /*if (responseDB_2.rowsAffected.length <= 0 || responseDB_2.rowsAffected[0] == 0) 
-            throw 'No se ha logrado realizar la operación de update ticket result';*/
+        res.send(result);
 
-        res.send({ inserted: true });
     } catch (error) {
+
+        if (recreate_payment){
+
+            const entity = {
+                paymentId: form.idpago,
+                student: {
+                    code: form.student_code,
+                    name: form.student_name
+                },
+                payload:{
+                    dataMap: form.dataMap,
+                    order:{
+                        transactionDate : form.transactionDate
+                    }
+                },
+                unit: form.unit
+            }
+            ContipayQueue.addToRecreatePayment(req,entity);
+        }
         console.log("error: " + error);
         res.send({ inserted: false, message: error });
     } finally {
