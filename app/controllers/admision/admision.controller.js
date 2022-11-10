@@ -193,6 +193,7 @@ router.post('/', async (req, res) => {
 
         responseHTTP.status = true;
         responseHTTP.idPayment = formRegistered.idPagoOnline;
+        responseHTTP.monto = formRegistered.Monto;
         responseHTTP.urlPayment = `${req.app.get('config').urlcontipay}${responseHTTP.idPayment}`;
     } catch (error) {
         responseHTTP.status = false;
@@ -229,8 +230,9 @@ router.post('/pagoonline', async (req, res) => {
         requestDB.input('c_idbanco', sql.VarChar(8), "");
         requestDB.input('c_tipotarjeta', sql.VarChar(1), "");
         requestDB.input('c_eticket', sql.VarChar(30), form.eticket);
-
+        console.log("1");
         const responseDB = await requestDB.execute('[dbo].[sp_updatepagoonline]');
+        console.log("2");
         if (!responseDB)
             throw 'No se ha logrado realizar la operación de update pago online';
 
@@ -255,17 +257,23 @@ router.post('/pagoonline', async (req, res) => {
             requestDB_2.input('c_fechahora_deposito', sql.VarChar(15), '---');
             requestDB_2.input('c_fechahora_devolucion', sql.VarChar(15), '---');
             requestDB_2.input('c_dato_comercio', sql.VarChar(50), form.idpago);
+            console.log("3");
             const responseDB_2 = await requestDB_2.execute('[dbo].[sp_updateTicketResult]');
+            console.log("4");
             if (!responseDB_2)
                 throw 'No se ha logrado realizar la operación de update pago online';
         }
         
         const requestDB_3 = pool.request();
         requestDB_3.input('n_IDPago', sql.Char(9), form.idpago);
+        console.log("5");
         const invoiceData = await requestDB_3.execute('[dbo].[sp_DatosBoleta]');
+        console.log("6");
         if (!invoiceData)
                 throw 'No se ha logrado realizar la operación de update pago online';
         
+        console.log(invoiceData);
+
         const data = invoiceData.recordset[0];
         const result = {
             unit: data.IDDependencia || 'UCCI',
