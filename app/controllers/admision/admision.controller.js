@@ -6,7 +6,21 @@ const ContipayQueue = require('./../contipayQueue');
 
 const createConnection = (config) => new sql.ConnectionPool(config).connect();
 
+function consoleRequest(req){
+    
+    console.log("req.route",{
+        baserUrl : req.baseUrl,
+        originalUrl: req.originalUrl,
+        path: req.route.path,
+        methods: req.route.methods
+    });
+    console.log("req.params",req.params);
+    console.log("req.body",req.body);
+}
+
 async function getProcedure(req, res, config, procedure_name, parameters) {
+
+    consoleRequest(req);
 
     let responseToken = jwt.validateJWTToken(req);
     if (responseToken.status != 0) {
@@ -38,13 +52,14 @@ async function getProcedure(req, res, config, procedure_name, parameters) {
 
 router.get('/token', function (req, res, next) {
 
+    consoleRequest(req);
     jwt.getToken(req, res, next);
 
 });
 
 
 router.get('/sedes', async (req, res) => {
-
+  
     getProcedure(req, res, 'dbConfig', '[DBO].[sp_AdmisionListSedes]', []);
 
 });
@@ -122,6 +137,8 @@ router.get('/modalidadestudio', async (req, res) => {
 
 
 router.post('/', async (req, res) => {
+
+    consoleRequest(req);
 
     let responseToken = jwt.validateJWTToken(req);
     if (responseToken.status != 0) {
@@ -209,6 +226,8 @@ router.post('/', async (req, res) => {
 });
 
 router.post('/pagoonline', async (req, res) => {
+    
+    consoleRequest(req);
     
     let responseToken = jwt.validateJWTToken(req);
     if (responseToken.status != 0) {
