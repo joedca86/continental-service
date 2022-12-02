@@ -168,6 +168,8 @@ router.post('/', async (req, res) => {
 
         const requestDB_2 = pool.request();
 
+        console.log("form.discountCode: " + form.discountCode);
+
         requestDB_2.input('c_ID', sql.VarChar(15), personParams.NumDocumento);
         requestDB_2.input('c_idpersona', sql.VarChar(20), personParams.IDPersona);
         requestDB_2.input('IDRegistroFormulario', sql.UniqueIdentifier, personParams.IDRegistroFormulario);
@@ -182,6 +184,7 @@ router.post('/', async (req, res) => {
         requestDB_2.input('c_IDInstitucionProcedencia', sql.VarChar(11), form.institutionOfOrigin);
         requestDB_2.input('c_tipo_evaluacion', sql.VarChar(10), form.examType);
         requestDB_2.input('c_IDLugarTrabajo', sql.VarChar(5), '');
+        requestDB_2.input('c_CodDescuento', sql.VarChar(10), form.discountCode);
         const responseDB_2 = await requestDB_2.execute('[dbo].[sp_RegistrarPostulacionFrm]')
         const formRegistered = responseDB_2.recordset[0];
 
