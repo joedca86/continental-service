@@ -4,7 +4,7 @@ const sql = require('mssql');
 const jwt = require('./jwt');
 const ContipayQueue = require('./../contipayQueue');
 
-const createConnection = (config) => new sql.ConnectionPool(config).connect();
+const getConnection = (config) => new sql.ConnectionPool(config).connect();
 
 function consoleRequest(req){
     
@@ -27,27 +27,25 @@ async function getProcedure(req, res, config, procedure_name, parameters) {
         return res.status(responseToken.status).send({ status: 0, message: responseToken.message });
     }
 
-    sql.connect(req.app.get(config))
-        .then(pool => {
-            let request = pool.request();
-            parameters.forEach(param => {
-                request.input(param.name, sql.VarChar(param.length), param.value);
-            });
-            return request.execute(procedure_name);
-        })
-        .then(result => {
-            sql.close();
-            return res.json({ status: 1, result: result.recordset });
-        })
-        .catch(error => {
-            sql.close();
-            return res.json({ status: 0, message: 'Ocurrio un error' + error });
-        });
-    sql.on('error', error => {
-        sql.close();
-        return res.json({ status: 0, message: 'Ocurrio un error' + error });
-    });
+    let pool;
 
+    try {
+        pool = await getConnection(req.app.get(config));
+
+        let request = pool.request();
+        parameters.forEach(param => {
+            request.input(param.name, sql.VarChar(param.length), param.value);
+        });
+
+        let result = await request.execute(procedure_name);
+        return res.json({ status: 1, result: result.recordset });
+
+    } catch (error) {
+        return res.json({ status: 0, message: 'Ocurrio un error' + error });
+    } 
+    finally{
+        if (pool) await pool.close();
+    }
 };
 
 router.get('/token', function (req, res, next) {
@@ -155,7 +153,8 @@ router.post('/', async (req, res) => {
     let pool;
 
     try {
-        pool = await createConnection(req.app.get('dbConfig'));
+
+        pool = await getConnection(req.app.get('dbConfig'));
         const requestDB = pool.request();
 
         requestDB.input('c_Nombres', sql.VarChar(100), form.firstName);
@@ -240,7 +239,7 @@ router.post('/pagoonline', async (req, res) => {
 
     try {
 
-        const pool = await createConnection(req.app.get('dbConfig'));
+        const pool = await getConnection(req.app.get('dbConfig'));
 
         const status = form.dataMap.STATUS === 'Authorized' ? '1' : '0';
 
